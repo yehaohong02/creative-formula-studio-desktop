@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Menu } = require('electron');
 const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const fs = require('fs');
@@ -17,6 +17,86 @@ log.info('App starting...');
 let mainWindow;
 let updateWindow;
 
+// 创建中文菜单
+function createChineseMenu() {
+  const template = [
+    {
+      label: '文件',
+      submenu: [
+        {
+          label: '检查更新',
+          click: () => {
+            if (!isDev) {
+              autoUpdater.checkForUpdates();
+            }
+          }
+        },
+        { type: 'separator' },
+        {
+          label: '退出',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => {
+            app.quit();
+          }
+        }
+      ]
+    },
+    {
+      label: '编辑',
+      submenu: [
+        { label: '撤销', accelerator: 'CmdOrCtrl+Z', role: 'undo' },
+        { label: '重做', accelerator: 'Shift+CmdOrCtrl+Z', role: 'redo' },
+        { type: 'separator' },
+        { label: '剪切', accelerator: 'CmdOrCtrl+X', role: 'cut' },
+        { label: '复制', accelerator: 'CmdOrCtrl+C', role: 'copy' },
+        { label: '粘贴', accelerator: 'CmdOrCtrl+V', role: 'paste' },
+        { label: '全选', accelerator: 'CmdOrCtrl+A', role: 'selectall' }
+      ]
+    },
+    {
+      label: '视图',
+      submenu: [
+        { label: '刷新', accelerator: 'CmdOrCtrl+R', role: 'reload' },
+        { label: '强制刷新', accelerator: 'Shift+CmdOrCtrl+R', role: 'forceReload' },
+        { type: 'separator' },
+        { label: '开发者工具', accelerator: 'F12', role: 'toggleDevTools' },
+        { type: 'separator' },
+        { label: '实际大小', accelerator: 'CmdOrCtrl+0', role: 'resetZoom' },
+        { label: '放大', accelerator: 'CmdOrCtrl+Plus', role: 'zoomIn' },
+        { label: '缩小', accelerator: 'CmdOrCtrl+-', role: 'zoomOut' },
+        { type: 'separator' },
+        { label: '全屏', accelerator: 'F11', role: 'togglefullscreen' }
+      ]
+    },
+    {
+      label: '窗口',
+      submenu: [
+        { label: '最小化', accelerator: 'CmdOrCtrl+M', role: 'minimize' },
+        { label: '关闭', accelerator: 'CmdOrCtrl+W', role: 'close' }
+      ]
+    },
+    {
+      label: '帮助',
+      submenu: [
+        {
+          label: '关于',
+          click: () => {
+            dialog.showMessageBox(mainWindow, {
+              type: 'info',
+              title: '关于',
+              message: '创意公式工坊',
+              detail: `版本: ${app.getVersion()}\n\nAI买量视频创意公式工坊\n基于 Next.js + Electron 构建`
+            });
+          }
+        }
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
 // 创建主窗口
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -27,11 +107,15 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      preload: path.join(__dirname, 'preload.js')
+      preload: path.join(__dirname, 'preload.js'),
+      webSecurity: false  // 允许加载本地文件
     },
     titleBarStyle: 'default',
     show: false
   });
+
+  // 设置中文菜单
+  createChineseMenu();
 
   // 加载应用
   if (isDev) {
@@ -39,18 +123,38 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
   } else {
     // 生产环境加载静态文件
-    const indexPath = path.join(__dirname, 'dist', 'index.html');
-    if (fs.existsSync(indexPath)) {
-      mainWindow.loadFile(indexPath);
-    } else {
-      // 尝试加载导出目录
-      const outPath = path.join(__dirname, 'out', 'index.html');
-      if (fs.existsSync(outPath)) {
-        mainWindow.loadFile(outPath);
-      } else {
-        dialog.showErrorBox('错误', '应用文件不存在，请重新安装。');
-        app.quit();
+    // 尝试多个可能的路径（因为打包后路径结构可能不同）
+    const possiblePaths = [
+      path.join(process.resourcesPath, 'app', 'dist', 'index.html'),
+      path.join(__dirname, 'dist', 'index.html'),
+      path.join(__dirname, 'out', 'index.html'),
+      path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'index.html'),
+      path.join(process.resourcesPath, 'dist', 'index.html')
+    ];
+
+    let loaded = false;
+    for (const indexPath of possiblePaths) {
+      log.info('Trying to load:', indexPath);
+      if (fs.existsSync(indexPath)) {
+        log.info('Found index.html at:', indexPath);
+        mainWindow.loadFile(indexPath);
+        loaded = true;
+        break;
       }
+    }
+
+    if (!loaded) {
+      log.error('Could not find index.html in any of the expected locations');
+      // 列出 resources 目录内容以便调试
+      try {
+        const resourcesDir = fs.readdirSync(process.resourcesPath);
+        log.error('Resources directory contents:', resourcesDir);
+      } catch (e) {
+        log.error('Could not read resources directory:', e.message);
+      }
+      
+      dialog.showErrorBox('错误', '应用文件不存在，请重新安装。\n\n详细：找不到 index.html 文件');
+      app.quit();
     }
   }
 
@@ -64,6 +168,12 @@ function createWindow() {
         autoUpdater.checkForUpdatesAndNotify();
       }, 5000);
     }
+  });
+
+  // 监听加载失败
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    log.error('Failed to load:', errorCode, errorDescription);
+    dialog.showErrorBox('加载失败', `无法加载应用内容：${errorDescription}\n错误码：${errorCode}`);
   });
 
   // 窗口关闭处理
