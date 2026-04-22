@@ -4,12 +4,6 @@ on:
   push:
     tags:
       - 'v*'
-  workflow_dispatch:
-    inputs:
-      version:
-        description: '版本号 (例如: 1.0.0)'
-        required: true
-        default: '1.0.0'
 
 permissions:
   contents: write
@@ -27,15 +21,11 @@ jobs:
       with:
         node-version: '20'
     
-    - name: Determine version
+    - name: Get version from tag
       id: version
       shell: pwsh
       run: |
-        if ("${{ github.event.inputs.version }}") {
-          $VERSION = "${{ github.event.inputs.version }}"
-        } else {
-          $VERSION = "${{ github.ref_name }}".Substring(1)
-        }
+        $VERSION = "${{ github.ref_name }}".Substring(1)
         echo "version=$VERSION" >> $env:GITHUB_OUTPUT
         Write-Host "Building version: $VERSION"
     
@@ -43,28 +33,33 @@ jobs:
       shell: pwsh
       run: |
         $version = "${{ steps.version.outputs.version }}"
-        $packageJson = Get-Content package.json | ConvertFrom-Json
-        $packageJson.version = $version
-        $packageJson | ConvertTo-Json -Depth 10 | Set-Content package.json
+        $content = Get-Content package.json -Raw | ConvertFrom-Json
+        $content.version = $version
+        $content | ConvertTo-Json -Depth 10 | Set-Content package.json
     
     - name: Install dependencies
       run: npm install
     
-    - name: Build Next.js app
+    - name: Build Next.js static export
       run: npm run build
+    
+    - name: Verify dist folder
+      shell: pwsh
+      run: |
+        if (Test-Path "dist/index.html") {
+          Write-Host "✓ dist/index.html found"
+          Get-ChildItem -Path "dist" -Recurse | Select-Object -First 20
+        } else {
+          Write-Host "✗ dist/index.html not found"
+          exit 1
+        }
     
     - name: Build Electron app
       run: npx electron-builder --win
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
-    - name: List build output
-      shell: pwsh
-      run: |
-        Get-ChildItem -Path "release" -Recurse
-    
     - name: Create Release
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
       uses: softprops/action-gh-release@v1
       with:
         files: |
@@ -74,20 +69,21 @@ jobs:
         body: |
           ## 创意公式工坊桌面版 v${{ steps.version.outputs.version }}
           
-          ### 功能特性
+          ### ✨ 功能特性
           - 7大爆款创意公式库
-          - 榜单数据对比分析
           - AI脚本生成器
-          - 自动更新功能
+          - 榜单数据对比分析
+          - **强制热更新** - 启动自动检查并安装更新
           
-          ### 安装包
-          - `创意公式工坊 Setup x.x.x.exe` - 安装版（推荐）
-          - `创意公式工坊 x.x.x.exe` - 便携版（免安装）
+          ### 📥 安装包
+          - `Setup.x.x.x.exe` - 安装版（推荐）
           
-          ### 系统要求
+          ### 🔄 自动更新
+          启动应用后自动检查更新，发现新版本自动下载并安装，无需手动操作。
+          
+          ### 💻 系统要求
           - Windows 10/11 64位
-          - 无需安装其他依赖
         draft: false
         prerelease: false
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
