@@ -74,27 +74,21 @@
           "arch": ["x64"]
         }
       ],
-      "icon": "public/icon.svg",
       "publisherName": "yehaohong02"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerIcon": "public/icon.svg",
-      "uninstallerIcon": "public/icon.svg",
-      "installerHeaderIcon": "public/icon.svg",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "创意公式工坊"
     },
     "mac": {
       "target": ["dmg", "zip"],
-      "icon": "public/icon.svg",
       "category": "public.app-category.productivity"
     },
     "linux": {
       "target": ["AppImage", "deb", "rpm"],
-      "icon": "public/icon.svg",
       "category": "Office"
     }
   }

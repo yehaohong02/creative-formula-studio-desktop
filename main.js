@@ -28,8 +28,7 @@ function createWindow() {
       preload: path.join(__dirname, 'preload.js')
     },
     titleBarStyle: 'default',
-    show: false,
-    icon: path.join(__dirname, 'public', 'icon.svg')
+    show: false
   });
 
   // 加载应用
