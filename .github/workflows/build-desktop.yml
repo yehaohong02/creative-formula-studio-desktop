@@ -9,81 +9,29 @@ permissions:
   contents: write
 
 jobs:
-  build-windows:
+  build:
     runs-on: windows-latest
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-    
-    - name: Get version from tag
-      id: version
-      shell: pwsh
-      run: |
-        $VERSION = "${{ github.ref_name }}".Substring(1)
-        echo "version=$VERSION" >> $env:GITHUB_OUTPUT
-        Write-Host "Building version: $VERSION"
-    
-    - name: Update package.json version
-      shell: pwsh
-      run: |
-        $version = "${{ steps.version.outputs.version }}"
-        $content = Get-Content package.json -Raw | ConvertFrom-Json
-        $content.version = $version
-        $content | ConvertTo-Json -Depth 10 | Set-Content package.json
-    
-    - name: Install dependencies
-      run: npm install
-    
-    - name: Build Next.js static export
-      run: npm run build
-    
-    - name: Verify dist folder
-      shell: pwsh
-      run: |
-        if (Test-Path "dist/index.html") {
-          Write-Host "✓ dist/index.html found"
-          Get-ChildItem -Path "dist" -Recurse | Select-Object -First 20
-        } else {
-          Write-Host "✗ dist/index.html not found"
-          exit 1
-        }
-    
-    - name: Build Electron app
-      run: npx electron-builder --win
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        files: |
-          release/*.exe
-          release/latest.yml
-        name: "创意公式工坊 v${{ steps.version.outputs.version }}"
-        body: |
-          ## 创意公式工坊桌面版 v${{ steps.version.outputs.version }}
-          
-          ### ✨ 功能特性
-          - 7大爆款创意公式库
-          - AI脚本生成器
-          - 榜单数据对比分析
-          - **强制热更新** - 启动自动检查并安装更新
-          
-          ### 📥 安装包
-          - `Setup.x.x.x.exe` - 安装版（推荐）
-          
-          ### 🔄 自动更新
-          启动应用后自动检查更新，发现新版本自动下载并安装，无需手动操作。
-          
-          ### 💻 系统要求
-          - Windows 10/11 64位
-        draft: false
-        prerelease: false
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm install
+      
+      - name: Build
+        run: npm run build
+      
+      - name: Build Electron
+        run: npx electron-builder --win
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release/*.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
