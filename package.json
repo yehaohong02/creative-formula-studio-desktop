@@ -1,0 +1,101 @@
+{
+  "name": "creative-formula-studio-desktop",
+  "version": "1.0.0",
+  "description": "创意公式工坊桌面版 - 基于 Next.js + Electron",
+  "main": "main.js",
+  "author": "yehaohong02",
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:build:win": "npm run build && electron-builder --win",
+    "electron:build:mac": "npm run build && electron-builder --mac",
+    "electron:build:linux": "npm run build && electron-builder --linux",
+    "dist": "electron-builder",
+    "dist:win": "electron-builder --win",
+    "postinstall": "electron-builder install-app-deps"
+  },
+  "dependencies": {
+    "electron-updater": "^6.1.7",
+    "framer-motion": "^12.38.0",
+    "next": "16.2.4",
+    "react": "19.2.4",
+    "react-dom": "19.2.4"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "concurrently": "^8.2.2",
+    "electron": "^28.0.0",
+    "electron-builder": "^24.9.1",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.4",
+    "tailwindcss": "^4",
+    "typescript": "^5",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.yehaohong.creative-formula-studio",
+    "productName": "创意公式工坊",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "./dist",
+        "to": "dist"
+      }
+    ],
+    "publish": {
+      "provider": "github",
+      "owner": "yehaohong02",
+      "repo": "creative-formula-studio-desktop",
+      "releaseType": "release"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "public/icon.svg",
+      "publisherName": "yehaohong02"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "public/icon.svg",
+      "uninstallerIcon": "public/icon.svg",
+      "installerHeaderIcon": "public/icon.svg",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "创意公式工坊"
+    },
+    "mac": {
+      "target": ["dmg", "zip"],
+      "icon": "public/icon.svg",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage", "deb", "rpm"],
+      "icon": "public/icon.svg",
+      "category": "Office"
+    }
+  }
+}

@@ -1,0 +1,189 @@
+name: Build and Release Desktop App
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号 (例如: 1.0.0)'
+        required: true
+        default: '1.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Determine version
+      id: version
+      shell: pwsh
+      run: |
+        if ("${{ github.event.inputs.version }}") {
+          $VERSION = "${{ github.event.inputs.version }}"
+        } else {
+          $VERSION = "${{ github.ref_name }}".Substring(1)
+        }
+        echo "version=$VERSION" >> $env:GITHUB_OUTPUT
+        Write-Host "Building version: $VERSION"
+    
+    - name: Update package.json version
+      shell: pwsh
+      run: |
+        $version = "${{ steps.version.outputs.version }}"
+        $packageJson = Get-Content package.json | ConvertFrom-Json
+        $packageJson.version = $version
+        $packageJson | ConvertTo-Json -Depth 10 | Set-Content package.json
+        Get-Content package.json
+    
+    - name: Merge Electron config
+      shell: pwsh
+      run: |
+        $main = Get-Content package.json | ConvertFrom-Json
+        $electron = Get-Content package-electron.json | ConvertFrom-Json
+        
+        # 合并 scripts
+        foreach ($script in $electron.scripts.PSObject.Properties) {
+          $main.scripts | Add-Member -NotePropertyName $script.Name -NotePropertyValue $script.Value -Force
+        }
+        
+        # 合并 dependencies
+        foreach ($dep in $electron.dependencies.PSObject.Properties) {
+          $main.dependencies | Add-Member -NotePropertyName $dep.Name -NotePropertyValue $dep.Value -Force
+        }
+        
+        # 合并 devDependencies
+        foreach ($dep in $electron.devDependencies.PSObject.Properties) {
+          $main.devDependencies | Add-Member -NotePropertyName $dep.Name -NotePropertyValue $dep.Value -Force
+        }
+        
+        # 添加 build 配置
+        $main | Add-Member -NotePropertyName "build" -NotePropertyValue $electron.build -Force
+        
+        $main | ConvertTo-Json -Depth 10 | Set-Content package.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build Next.js app
+      run: npm run build
+    
+    - name: Build Electron app
+      run: npm run dist:win
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: List build output
+      shell: pwsh
+      run: |
+        Get-ChildItem -Path "release" -Recurse
+    
+    - name: Create Release
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/*.exe
+          release/*.exe.blockmap
+          release/latest.yml
+        name: "创意公式工坊 v${{ steps.version.outputs.version }}"
+        body: |
+          ## 创意公式工坊桌面版 v${{ steps.version.outputs.version }}
+          
+          ### 功能特性
+          - 7大爆款创意公式库
+          - 榜单数据对比分析
+          - AI脚本生成器
+          - 自动更新功能
+          
+          ### 安装包
+          - `创意公式工坊 Setup x.x.x.exe` - 安装版（推荐）
+          - `创意公式工坊 x.x.x.exe` - 便携版（免安装）
+          
+          ### 系统要求
+          - Windows 10/11 64位
+          - 无需安装其他依赖
+          
+          ### 自动更新
+          应用内置自动更新功能，启动时会自动检查新版本。
+          也可以点击菜单栏「帮助」→「检查更新」手动检查。
+          
+          ### 使用说明
+          1. 下载安装包并安装
+          2. 启动应用
+          3. 浏览创意公式或使用AI生成脚本
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload artifact (manual run)
+      if: github.event_name == 'workflow_dispatch'
+      uses: actions/upload-artifact@v4
+      with:
+        name: 创意公式工坊-v${{ steps.version.outputs.version }}-windows
+        path: |
+          release/*.exe
+
+  build-mac:
+    runs-on: macos-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+    
+    - name: Determine version
+      id: version
+      run: |
+        VERSION="${GITHUB_REF_NAME#v}"
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    
+    - name: Update package.json version
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        jq ".version = \"$VERSION\"" package.json > package.json.tmp && mv package.json.tmp package.json
+    
+    - name: Merge Electron config
+      run: |
+        jq -s '.[0] * .[1]' package.json package-electron.json > package.json.tmp && mv package.json.tmp package.json
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build Next.js app
+      run: npm run build
+    
+    - name: Build Electron app
+      run: npm run electron:build:mac
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Upload macOS artifacts to release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          release/*.dmg
+          release/*.zip
+        name: "创意公式工坊 v${{ steps.version.outputs.version }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
