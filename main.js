@@ -6,10 +6,12 @@ const fs = require('fs');
 // 开发环境配置
 const isDev = process.env.NODE_ENV === 'development';
 
-// 日志配置
-const log = require('electron-log');
+// 日志配置（简化版，不使用 electron-log）
+const log = {
+  info: (...args) => console.log('[INFO]', ...args),
+  error: (...args) => console.error('[ERROR]', ...args)
+};
 autoUpdater.logger = log;
-autoUpdater.logger.transports.file.level = 'info';
 log.info('App starting...');
 
 let mainWindow;
