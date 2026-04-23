@@ -1,79 +1,36 @@
 {
-  "name": "creative-formula-studio-desktop",
-  "version": "1.0.2",
-  "description": "创意公式工坊桌面版 - 基于 Next.js + Electron",
+  "name": "creative-formula-studio",
+  "version": "1.0.0",
+  "description": "创意公式工坊 - AI买量视频创意生成工具",
   "main": "main.js",
-  "author": "yehaohong02",
-  "license": "MIT",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && electron .\"",
-    "electron:build": "npm run build && electron-builder",
-    "electron:build:win": "npm run build && electron-builder --win",
-    "dist": "electron-builder",
-    "dist:win": "electron-builder --win"
-  },
-  "dependencies": {
-    "electron-updater": "^6.1.7",
-    "framer-motion": "^12.38.0",
-    "next": "16.2.4",
-    "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "start": "electron .",
+    "dist": "electron-builder"
   },
   "devDependencies": {
-    "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "concurrently": "^8.2.2",
-    "electron": "^28.0.0",
-    "electron-builder": "^24.9.1",
-    "tailwindcss": "^4",
-    "typescript": "^5",
-    "wait-on": "^7.2.0"
+    "electron": "28.0.0",
+    "electron-builder": "^24.9.1"
   },
   "build": {
     "appId": "com.yehaohong.creative-formula-studio",
     "productName": "创意公式工坊",
-    "copyright": "Copyright © 2025 yehaohong02",
     "directories": {
-      "output": "release",
-      "buildResources": "build"
+      "output": "dist"
     },
     "files": [
-      "dist/**/*",
       "main.js",
-      "preload.js",
-      "package.json"
+      "index.html",
+      "icon.png"
     ],
-    "asar": true,
-    "asarUnpack": [
-      "dist/**/*"
-    ],
-    "publish": {
-      "provider": "github",
-      "owner": "yehaohong02",
-      "repo": "creative-formula-studio-desktop",
-      "releaseType": "release"
-    },
     "win": {
-      "target": [
-        {
-          "target": "nsis",
-          "arch": ["x64"]
-        }
-      ],
-      "publisherName": "yehaohong02"
+      "target": "nsis",
+      "icon": "icon.png"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "创意公式工坊",
-      "include": "build/installer.nsh"
+      "installerIcon": "icon.png",
+      "uninstallerIcon": "icon.png"
     }
   }
 }

@@ -1,0 +1,1600 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>创意公式工坊</title>
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --bg-primary: #f8f9fa;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --text-primary: #1a1a2e;
+      --text-secondary: #666;
+      --text-muted: #999;
+      --border-color: #e8e8e8;
+      --border-hover: #d0d0d0;
+      --accent-color: #667eea;
+      --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --header-bg: #ffffff;
+    }
+    
+    [data-theme="dark"] {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #1a1a2e;
+      --bg-card: rgba(255, 255, 255, 0.05);
+      --text-primary: #ffffff;
+      --text-secondary: rgba(255, 255, 255, 0.7);
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --border-hover: rgba(255, 255, 255, 0.2);
+      --header-bg: rgba(255, 255, 255, 0.03);
+    }
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      transition: background 0.3s, color 0.3s;
+    }
+    
+    /* Header */
+    .header {
+      background: var(--header-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 64px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 700;
+      font-size: 18px;
+    }
+    
+    .logo-text h1 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    
+    .logo-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .nav {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .nav-btn {
+      padding: 8px 20px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.3s;
+    }
+    
+    .nav-btn:hover {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    
+    .nav-btn.active {
+      background: rgba(102, 126, 234, 0.1);
+      color: var(--accent-color);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    
+    .history-btn, .theme-btn, .settings-btn {
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    
+    .history-btn:hover, .theme-btn:hover, .settings-btn:hover {
+      border-color: var(--border-hover);
+      background: var(--bg-primary);
+    }
+    
+    /* Main */
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px;
+    }
+    
+    .page-title {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .page-title h2 {
+      font-size: 32px;
+      font-weight: 700;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 24px;
+    }
+    
+    /* Filter Tabs */
+    .filter-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+    
+    .filter-tab {
+      padding: 10px 24px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    
+    .filter-tab:hover {
+      border-color: var(--border-hover);
+      color: var(--text-primary);
+    }
+    
+    .filter-tab.active {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: white;
+    }
+    
+    /* Formula Grid */
+    .formulas-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+      gap: 24px;
+    }
+    
+    .formula-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .formula-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--card-color, #667eea);
+    }
+    
+    .formula-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+      border-color: var(--border-hover);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 16px;
+    }
+    
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      background: var(--card-bg, rgba(102,126,234,0.1));
+    }
+    
+    .card-tag {
+      padding: 4px 12px;
+      background: rgba(102,126,234,0.1);
+      color: #667eea;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .formula-card h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    
+    .card-stats {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 16px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .stat-value {
+      font-size: 14px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+    
+    .stat-value.highlight {
+      color: #ff6b35;
+      font-weight: 600;
+    }
+    
+    .card-tags {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    
+    .tag {
+      padding: 4px 10px;
+      background: var(--bg-primary);
+      border-radius: 4px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    
+    .modal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 600px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 25px 80px rgba(0,0,0,0.4);
+    }
+    
+    .modal-header {
+      padding: 24px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-title {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .modal-title .card-icon {
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+    }
+    
+    .modal-title h3 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .modal-title p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+    
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: var(--bg-primary);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-close:hover {
+      background: var(--border-color);
+    }
+    
+    .modal-body {
+      padding: 24px;
+    }
+    
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 16px;
+    }
+    
+    .structure-list {
+      margin-bottom: 24px;
+    }
+    
+    .structure-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      padding: 12px;
+      background: var(--bg-primary);
+      border-radius: 8px;
+    }
+    
+    .structure-time {
+      font-size: 13px;
+      color: #ff6b35;
+      font-weight: 600;
+      min-width: 60px;
+    }
+    
+    .structure-type {
+      font-size: 12px;
+      color: #667eea;
+      background: rgba(102,126,234,0.1);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 8px;
+    }
+    
+    .structure-content {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .info-box {
+      background: var(--bg-primary);
+      padding: 16px;
+      border-radius: 8px;
+    }
+    
+    .info-box h4 {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    
+    .info-box p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    
+    .generate-script-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #ff9a7b 0%, #ff6b6b 100%);
+      border: none;
+      border-radius: 12px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .generate-script-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255,107,107,0.3);
+    }
+    
+    /* Generate Page */
+    .generate-page {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .generate-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+    
+    .generate-header h2 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .selected-formula-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+    }
+    
+    .selected-formula-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .change-formula-btn {
+      color: var(--accent-color);
+      font-size: 14px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+    
+    .form-container {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 32px;
+    }
+    
+    .form-group {
+      margin-bottom: 24px;
+    }
+    
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+    
+    .form-group label span {
+      color: #ff6b6b;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      transition: all 0.3s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+    
+    .platform-options {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    
+    .platform-option {
+      padding: 10px 20px;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      background: var(--bg-primary);
+      transition: all 0.3s;
+    }
+    
+    .platform-option:hover {
+      border-color: var(--border-hover);
+    }
+    
+    .platform-option.selected {
+      background: #ff6b6b;
+      border-color: #ff6b6b;
+      color: white;
+    }
+    
+    .submit-btn {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, #ff9a7b 0%, #ff6b6b 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .submit-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(255,107,107,0.3);
+    }
+    
+    .submit-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    /* Alert Messages */
+    .alert-box {
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    .alert-warning {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      color: #ff6b6b;
+    }
+    
+    .alert-error {
+      background: rgba(255, 107, 107, 0.1);
+      border: 1px solid rgba(255, 107, 107, 0.3);
+      color: #ff6b6b;
+    }
+    
+    .alert-success {
+      background: rgba(82, 196, 26, 0.1);
+      border: 1px solid rgba(82, 196, 26, 0.3);
+      color: #52c41a;
+    }
+    
+    /* Loading */
+    .loading-container {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--border-color);
+      border-top-color: var(--accent-color);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 20px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Title Bubbles */
+    .titles-section {
+      margin-top: 32px;
+    }
+    
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    
+    .section-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .refresh-btn {
+      padding: 8px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s;
+    }
+    
+    .refresh-btn:hover {
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+    }
+    
+    .title-bubbles {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    
+    .bubble-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    
+    .title-bubble {
+      padding: 12px 20px;
+      background: var(--bg-primary);
+      border: 2px solid var(--border-color);
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+      text-align: center;
+      max-width: 200px;
+    }
+    
+    .title-bubble:hover {
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+    }
+    
+    .title-bubble.selected {
+      background: var(--accent-gradient);
+      border-color: transparent;
+      color: white;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Script Cards */
+    .script-cards-container {
+      margin-top: 32px;
+    }
+    
+    .script-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    
+    @media (max-width: 900px) {
+      .script-cards {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .script-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      overflow: hidden;
+      transition: all 0.3s;
+    }
+    
+    .script-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      border-color: var(--border-hover);
+    }
+    
+    .script-card-header {
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .script-card-header.aggressive { background: linear-gradient(135deg, #ff6b6b 0%, #ff8e8e 100%); }
+    .script-card-header.curious { background: linear-gradient(135deg, #9b59b6 0%, #bb8fce 100%); }
+    .script-card-header.data { background: linear-gradient(135deg, #3498db 0%, #5dade2 100%); }
+    
+    .version-badge {
+      width: 40px;
+      height: 40px;
+      background: white;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #333;
+      font-size: 16px;
+    }
+    
+    .script-card-header h4 {
+      color: white;
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .script-card-header p {
+      color: rgba(255,255,255,0.9);
+      font-size: 13px;
+    }
+    
+    .script-card-body {
+      padding: 20px;
+      min-height: 200px;
+    }
+    
+    .script-card-body pre {
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .script-card-footer {
+      padding: 0 20px 20px;
+    }
+    
+    .generate-onemin-btn {
+      width: 100%;
+      padding: 12px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      color: var(--text-secondary);
+      transition: all 0.3s;
+    }
+    
+    .generate-onemin-btn:hover {
+      background: var(--accent-color);
+      border-color: var(--accent-color);
+      color: white;
+    }
+    
+    .onemin-section {
+      margin-top: 16px;
+      padding: 16px;
+      background: var(--bg-primary);
+      border-radius: 12px;
+      border-left: 4px solid #ff6b35;
+    }
+    
+    .onemin-section h5 {
+      font-size: 14px;
+      color: #ff6b35;
+      margin-bottom: 12px;
+      font-weight: 600;
+    }
+    
+    .onemin-section pre {
+      font-family: inherit;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .copy-btn {
+      margin-top: 12px;
+      padding: 8px 16px;
+      background: var(--accent-gradient);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      color: white;
+      transition: all 0.3s;
+    }
+    
+    .copy-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* History Panel */
+    .history-panel {
+      position: fixed;
+      top: 0;
+      right: -400px;
+      width: 400px;
+      height: 100vh;
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border-color);
+      z-index: 2000;
+      transition: right 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .history-panel.open {
+      right: 0;
+    }
+    
+    .history-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .history-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .history-close {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: var(--bg-primary);
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 18px;
+      color: var(--text-secondary);
+    }
+    
+    .history-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+    
+    .history-item {
+      padding: 16px;
+      background: var(--bg-primary);
+      border-radius: 12px;
+      margin-bottom: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .history-item:hover {
+      background: var(--border-color);
+    }
+    
+    .history-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .history-item-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .history-item-time {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    
+    .history-item-desc {
+      font-size: 13px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .clear-history-btn {
+      margin: 16px;
+      padding: 12px;
+      background: #ff6b6b;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .clear-history-btn:hover {
+      background: #ff5252;
+    }
+    
+    .empty-history {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+    
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: var(--bg-primary);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--border-hover);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    
+    const formulas = [
+      { id: 'f1', name: '末世生存+建造经营', subtitle: '热门榜爆款公式', icon: '🔥', color: '#FF6B35', bg: 'rgba(255,107,53,0.1)', popularity: '18万/周', case: 'Whiteout Survival', duration: '1分7秒', tags: ['建造经营/模拟', '成就进步', '末世题材'], tip: '重点展示建造过程的爽快感，用加速剪辑提升节奏' },
+      { id: 'f2', name: '真人剧情+游戏混剪', subtitle: '热门榜爆款公式', icon: '🎬', color: '#00D9FF', bg: 'rgba(0,217,255,0.1)', popularity: '13万/周', case: 'Dark War:Survival', duration: '34秒', tags: ['真人', '剧情叙事', '混合'], tip: '真人与游戏切换流畅，情绪转折自然' },
+      { id: 'f3', name: '解压治愈+放松逃离', subtitle: '热门榜爆款公式', icon: '🌿', color: '#7ED321', bg: 'rgba(126,211,33,0.1)', popularity: '15万/周', case: 'Big Farm Homestead', duration: '59秒', tags: ['解压治愈', '放松逃离', '建造经营'], tip: '突出逃离现实压力的情绪价值，节奏舒缓' },
+      { id: 'f4', name: '突发事件+快速响应', subtitle: '飙升榜增长公式', icon: '⚡', color: '#FFD700', bg: 'rgba(255,215,0,0.1)', popularity: '待监控', case: '-', duration: '30-60秒', tags: ['技巧挑战', '逆境反击', '突发事件'], tip: '适合新活动上线、版本更新时快速起量' },
+      { id: 'f5', name: '真人出镜+技巧展示', subtitle: '新创意榜霸榜公式', icon: '🎯', color: '#FF006E', bg: 'rgba(255,0,110,0.1)', popularity: '8-13万/周', case: 'Mobile Legends', duration: '24秒', tags: ['真人', '技巧挑战', '真实专业'], tip: '真人出镜增加信任感，技巧展示要有可操作性' },
+      { id: 'f6', name: '新角色/新玩法首发', subtitle: '新创意榜测试公式', icon: '🆕', color: '#9B59B6', bg: 'rgba(155,89,182,0.1)', popularity: '11万/周', case: 'MONOPOLY GO!', duration: '1分24秒', tags: ['剧情叙事', '沉浸剧情', '探索好奇'], tip: '适合版本更新、节日活动、IP联动期间投放' },
+      { id: 'f7', name: '短平快+高频测试', subtitle: '新创意榜测试公式', icon: '⚡', color: '#FFBE0B', bg: 'rgba(255,190,11,0.1)', popularity: '13万/周', case: 'Hexa Diamonds', duration: '30秒', tags: ['解压治愈', '轻松上手', '建造经营'], tip: '节奏要快，3-5秒内必须出现第一个爽点' }
+    ];
+    
+    const structures = {
+      f1: [{time:'0-3秒',type:'黄金3秒',content:'末世场景冲击（废墟/冰雪/火光）'},{time:'3-15秒',type:'核心玩法',content:'基地建造过程（加速+音效）'},{time:'15-30秒',type:'情绪爆点',content:'成长强化展示（成就）'},{time:'30秒+',type:'CTA',content:'"建立你的避难所"'}],
+      f2: [{time:'0-3秒',type:'黄金3秒',content:'真人困境（被嘲笑/失败/危机）'},{time:'3-15秒',type:'核心玩法',content:'游戏高光时刻（反杀/胜利）'},{time:'情绪爆点',type:'情绪共鸣',content:'真人表情惊喜+游戏特效叠加'},{time:'结尾',type:'CTA',content:'"点击下载，开启你的传奇"'}],
+      f3: [{time:'0-3秒',type:'黄金3秒',content:'生活压力场景（工作/噪音/焦虑）'},{time:'3-15秒',type:'核心玩法',content:'游戏治愈画面（农场/动物/自然）'},{time:'情绪爆点',type:'情绪共鸣',content:'收获/装饰/萌宠互动'},{time:'结尾',type:'CTA',content:'"来放松一下吧，远离压力"'}],
+      f4: [{time:'0-3秒',type:'黄金3秒',content:'紧急事件（敌人入侵/灾难发生）'},{time:'15秒',type:'核心玩法',content:'快速应对策略（调兵/建造/升级）'},{time:'情绪爆点',type:'情绪共鸣',content:'成功防御/反击胜利'},{time:'结尾',type:'CTA',content:'"你能应对这个挑战吗？"'}],
+      f5: [{time:'0-3秒',type:'黄金3秒',content:'真人展示（主播/玩家出镜）'},{time:'15秒',type:'核心玩法',content:'游戏技巧演示（连招/走位/意识）'},{time:'情绪爆点',type:'情绪共鸣',content:'精彩击杀/团战胜利'},{time:'结尾',type:'CTA',content:'"学了这个技巧，你也能上分"'}],
+      f6: [{time:'0-3秒',type:'黄金3秒',content:'新角色亮相/新玩法预告'},{time:'15秒',type:'核心玩法',content:'技能展示/玩法教程'},{time:'情绪爆点',type:'情绪共鸣',content:'实战效果/玩家反应'},{time:'结尾',type:'CTA',content:'"全新内容，立即体验"'}],
+      f7: [{time:'0-3秒',type:'黄金3秒',content:'核心玩法展示'},{time:'10秒',type:'核心玩法',content:'快节奏剪辑（3-5个场景切换）'},{time:'情绪爆点',type:'情绪共鸣',content:'爽点集中爆发'},{time:'结尾',type:'CTA',content:'"点击下载"'}]
+    };
+    
+    function App() {
+      const [page, setPage] = useState('home');
+      const [selectedFormula, setSelectedFormula] = useState(null);
+      const [showModal, setShowModal] = useState(false);
+      const [apiKey, setApiKey] = useState(localStorage.getItem('ark_api_key') || '');
+      const [showSettings, setShowSettings] = useState(false);
+      const [showHistory, setShowHistory] = useState(false);
+      const [filter, setFilter] = useState('all');
+      const [darkMode, setDarkMode] = useState(false);
+      const [gameDesc, setGameDesc] = useState('');
+      const [platform, setPlatform] = useState('抖音');
+      const [loading, setLoading] = useState(false);
+      const [titles, setTitles] = useState([]);
+      const [batch, setBatch] = useState(1);
+      const [selectedTitle, setSelectedTitle] = useState('');
+      const [scripts, setScripts] = useState({ aggressive: '', curious: '', data: '' });
+      const [oneMinScripts, setOneMinScripts] = useState({ aggressive: '', curious: '', data: '' });
+      const [history, setHistory] = useState(JSON.parse(localStorage.getItem('script_history') || '[]'));
+      const [error, setError] = useState('');
+      
+      useEffect(() => {
+        document.body.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+      }, [darkMode]);
+      
+      const filteredFormulas = filter === 'all' ? formulas : 
+        filter === 'hot' ? formulas.filter(f => f.subtitle.includes('热门')) :
+        filter === 'rising' ? formulas.filter(f => f.subtitle.includes('飙升')) :
+        formulas.filter(f => f.subtitle.includes('新创意'));
+      
+      const openModal = (formula) => {
+        setSelectedFormula(formula);
+        setShowModal(true);
+      };
+      
+      const goToGenerate = () => {
+        setShowModal(false);
+        setPage('generate');
+        setTitles([]);
+        setScripts({ aggressive: '', curious: '', data: '' });
+        setOneMinScripts({ aggressive: '', curious: '', data: '' });
+        setSelectedTitle('');
+        setBatch(1);
+      };
+      
+      const saveSettings = () => {
+        localStorage.setItem('ark_api_key', apiKey);
+        setShowSettings(false);
+      };
+      
+      const addToHistory = (type, content, title) => {
+        const newItem = {
+          id: Date.now(),
+          type,
+          formula: selectedFormula?.name,
+          title,
+          content,
+          time: new Date().toLocaleString('zh-CN'),
+          gameDesc,
+          platform
+        };
+        const newHistory = [newItem, ...history].slice(0, 50);
+        setHistory(newHistory);
+        localStorage.setItem('script_history', JSON.stringify(newHistory));
+      };
+      
+      const loadFromHistory = (item) => {
+        setSelectedFormula(formulas.find(f => f.name === item.formula));
+        setGameDesc(item.gameDesc);
+        setPlatform(item.platform);
+        setSelectedTitle(item.title);
+        if (item.type === 'title') {
+          setTitles([item.title]);
+        } else if (item.type === 'scripts') {
+          setScripts(item.content);
+        } else if (item.type === 'onemin') {
+          setOneMinScripts({ [item.scriptType]: item.content });
+        }
+        setShowHistory(false);
+        setPage('generate');
+      };
+      
+      const clearHistory = () => {
+        setHistory([]);
+        localStorage.removeItem('script_history');
+      };
+      
+      const generateTitles = async (newBatch = false) => {
+        if (!apiKey) { setError('请先设置 API Key'); setShowSettings(true); return; }
+        
+        setLoading(true);
+        setError('');
+        const currentBatch = newBatch ? batch + 1 : 1;
+        if (newBatch) setBatch(currentBatch);
+        
+        try {
+          const formula = formulas.find(f => f.id === selectedFormula.id);
+          const prompt = `生成10个短视频标题（第${currentBatch}批）。游戏：${gameDesc}，平台：${platform}，公式：${formula.name}。要求：15-30字，口语化。直接输出10个标题，每行一个：`;
+          
+          const res = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'doubao-seed-2-0-pro-260215', messages: [{role:'user',content:prompt}], max_tokens: 800, temperature: 0.9 })
+          });
+          
+          if (!res.ok) throw new Error('API 请求失败');
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content || '';
+          const parsed = content.split('\n').map(l => l.trim()).filter(l => l.length > 5 && l.length < 100).slice(0, 10);
+          setTitles(parsed);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      const generateScripts = async () => {
+        if (!selectedTitle) { setError('请选择一个标题'); return; }
+        setLoading(true);
+        
+        try {
+          const formula = formulas.find(f => f.id === selectedFormula.id);
+          const struct = structures[selectedFormula.id];
+          const structText = struct.map(s => `${s.time}|${s.type}|${s.content}`).join('\n');
+          
+          const prompt = `生成3个版本脚本：\n\n【激进版】节奏更快，冲突更强，刺激用户肾上腺素\n【猎奇版】制造悬念，引发好奇，让用户想看完\n【数据版】突出数字、成就、对比\n\n游戏：${gameDesc}，平台：${platform}，公式：${formula.name}，标题：${selectedTitle}，结构：${structText}\n\n请用以下格式输出：\n\n###激进版###\n[脚本内容]\n\n###猎奇版###\n[脚本内容]\n\n###数据版###\n[脚本内容]`;
+          
+          const res = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'doubao-seed-2-0-pro-260215', messages: [{role:'user',content:prompt}], max_tokens: 3000, temperature: 0.8 })
+          });
+          
+          const data = await res.json();
+          const content = data.choices?.[0]?.message?.content || '';
+          
+          const aggressive = content.match(/###激进版###\s*([\s\S]*?)(?=###猎奇版###|$)/)?.[1]?.trim() || '';
+          const curious = content.match(/###猎奇版###\s*([\s\S]*?)(?=###数据版###|$)/)?.[1]?.trim() || '';
+          const dataScript = content.match(/###数据版###\s*([\s\S]*?)$/s)?.[1]?.trim() || '';
+          
+          const scriptsData = { aggressive, curious, data: dataScript };
+          setScripts(scriptsData);
+          addToHistory('scripts', scriptsData, selectedTitle);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      const generateOneMin = async (type) => {
+        setLoading(true);
+        
+        try {
+          const formula = formulas.find(f => f.id === selectedFormula.id);
+          const baseScript = scripts[type];
+          
+          const prompt = `基于以下${type === 'aggressive' ? '激进版' : type === 'curious' ? '猎奇版' : '数据版'}脚本，生成一个60秒的精简版。要求：保留核心创意，数据密度更高，节奏更紧凑。\n\n原脚本：\n${baseScript}`;
+          
+          const res = await fetch('https://ark.cn-beijing.volces.com/api/v3/chat/completions', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ model: 'doubao-seed-2-0-pro-260215', messages: [{role:'user',content:prompt}], max_tokens: 1500, temperature: 0.8 })
+          });
+          
+          const data = await res.json();
+          const oneMinContent = data.choices?.[0]?.message?.content || '';
+          setOneMinScripts(prev => ({ ...prev, [type]: oneMinContent }));
+          addToHistory('onemin', oneMinContent, selectedTitle, type);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+      
+      if (page === 'generate') {
+        return (
+          <div className="app">
+            <header className="header">
+              <div className="logo">
+                <div className="logo-icon">7F</div>
+                <div className="logo-text">
+                  <h1>创意公式工坊</h1>
+                  <p>爆款创意公式，基于广大大数据</p>
+                </div>
+              </div>
+              <nav className="nav">
+                <button className="nav-btn" onClick={() => setPage('home')}>爆款公式</button>
+                <button className="nav-btn active">实战案例</button>
+              </nav>
+              <div className="header-actions">
+                <button className="history-btn" onClick={() => setShowHistory(true)} title="历史记录">📋</button>
+                <button className="theme-btn" onClick={() => setDarkMode(!darkMode)}>{darkMode ? '🌙' : '☀️'}</button>
+                <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙️</button>
+              </div>
+            </header>
+            
+            {showSettings && (
+              <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+                <div className="modal" onClick={e => e.stopPropagation()}>
+                  <div className="modal-header">
+                    <h3>API 设置</h3>
+                    <button className="modal-close" onClick={() => setShowSettings(false)}>×</button>
+                  </div>
+                  <div className="modal-body">
+                    <div className="form-group">
+                      <label>火山方舟 API Key</label>
+                      <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="请输入 API Key" />
+                    </div>
+                    <button className="submit-btn" onClick={saveSettings}>保存</button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <div className={`history-panel ${showHistory ? 'open' : ''}`}>
+              <div className="history-header">
+                <h3>📋 历史记录</h3>
+                <button className="history-close" onClick={() => setShowHistory(false)}>×</button>
+              </div>
+              <div className="history-list">
+                {history.length === 0 ? (
+                  <div className="empty-history">暂无历史记录</div>
+                ) : (
+                  history.map(item => (
+                    <div key={item.id} className="history-item" onClick={() => loadFromHistory(item)}>
+                      <div className="history-item-header">
+                        <span className="history-item-title">
+                          {item.type === 'title' ? '📝 标题' : item.type === 'scripts' ? '🎬 三版本脚本' : '⏱️ 60秒版'}
+                          {item.formula && ` · ${item.formula}`}
+                        </span>
+                        <span className="history-item-time">{item.time}</span>
+                      </div>
+                      <div className="history-item-desc">{item.title}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+              {history.length > 0 && (
+                <button className="clear-history-btn" onClick={clearHistory}>清空历史</button>
+              )}
+            </div>
+            
+            <main className="main">
+              <div className="generate-page">
+                <div className="generate-header">
+                  <h2>使用公式生成脚本</h2>
+                </div>
+                
+                <div className="selected-formula-bar">
+                  <div className="selected-formula-info">
+                    <span style={{fontSize:24,marginRight:8}}>{selectedFormula?.icon}</span>
+                    <div>
+                      <div style={{fontWeight:600,color:'var(--text-primary)'}}>{selectedFormula?.name}</div>
+                      <div style={{fontSize:12,color:'var(--text-muted)'}}>{selectedFormula?.subtitle}</div>
+                    </div>
+                  </div>
+                  <button className="change-formula-btn" onClick={() => setPage('home')}>更换公式 →</button>
+                </div>
+                
+                <div className="form-container">
+                  <div className="form-group">
+                    <label>用一句话描述你的游戏 <span>*</span></label>
+                    <textarea value={gameDesc} onChange={e => setGameDesc(e.target.value)} placeholder="例如：一款SLG策略手游..." rows={3} />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>投放平台 <span>*</span></label>
+                    <div className="platform-options">
+                      {['抖音','快手','微信视频号','TikTok','YouTube'].map(p => (
+                        <div key={p} className={`platform-option ${platform === p ? 'selected' : ''}`} onClick={() => setPlatform(p)}>{p}</div>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {error && <div className="alert-box alert-error">{error}</div>}
+                  
+                  <button className="submit-btn" onClick={() => generateTitles()} disabled={loading}>
+                    {loading ? '生成中...' : '生成标题'}
+                  </button>
+                </div>
+                
+                {loading && !titles.length && (
+                  <div className="loading-container">
+                    <div className="spinner"></div>
+                    <p>AI 正在生成标题，请稍候...</p>
+                  </div>
+                )}
+                
+                {titles.length > 0 && (
+                  <div className="titles-section">
+                    <div className="section-header">
+                      <h3>选择标题（点击选择）</h3>
+                      <button className="refresh-btn" onClick={() => generateTitles(true)} disabled={loading}>
+                        🔄 换一批
+                      </button>
+                    </div>
+                    <div className="title-bubbles">
+                      <div className="bubble-row">
+                        {titles.slice(0, 5).map((t, i) => (
+                          <div key={i} className={`title-bubble ${selectedTitle === t ? 'selected' : ''}`} onClick={() => setSelectedTitle(t)}>{t}</div>
+                        ))}
+                      </div>
+                      <div className="bubble-row">
+                        {titles.slice(5, 10).map((t, i) => (
+                          <div key={i} className={`title-bubble ${selectedTitle === t ? 'selected' : ''}`} onClick={() => setSelectedTitle(t)}>{t}</div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {selectedTitle && (
+                      <button className="submit-btn" onClick={generateScripts} disabled={loading}>
+                        {loading ? '生成中...' : '🎬 生成3个版本脚本'}
+                      </button>
+                    )}
+                  </div>
+                )}
+                
+                {(scripts.aggressive || scripts.curious || scripts.data) && (
+                  <div className="script-cards-container">
+                    <div className="section-header">
+                      <h3>选择脚本版本</h3>
+                    </div>
+                    <div className="script-cards">
+                      <div className="script-card">
+                        <div className="script-card-header aggressive">
+                          <div className="version-badge">A</div>
+                          <div>
+                            <h4>激进版</h4>
+                            <p>节奏更快，冲突更强</p>
+                          </div>
+                        </div>
+                        <div className="script-card-body">
+                          <pre>{scripts.aggressive || '点击生成一分钟精简版...'}</pre>
+                        </div>
+                        <div className="script-card-footer">
+                          {!oneMinScripts.aggressive ? (
+                            <button className="generate-onemin-btn" onClick={() => generateOneMin('aggressive')} disabled={loading}>
+                              ⏱️ 生成60秒精简版
+                            </button>
+                          ) : (
+                            <div className="onemin-section">
+                              <h5>⏱️ 60秒精简版</h5>
+                              <pre>{oneMinScripts.aggressive}</pre>
+                              <button className="copy-btn" onClick={() => navigator.clipboard.writeText(oneMinScripts.aggressive)}>复制</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="script-card">
+                        <div className="script-card-header curious">
+                          <div className="version-badge">B</div>
+                          <div>
+                            <h4>猎奇版</h4>
+                            <p>制造悬念，引发好奇</p>
+                          </div>
+                        </div>
+                        <div className="script-card-body">
+                          <pre>{scripts.curious || '点击生成一分钟精简版...'}</pre>
+                        </div>
+                        <div className="script-card-footer">
+                          {!oneMinScripts.curious ? (
+                            <button className="generate-onemin-btn" onClick={() => generateOneMin('curious')} disabled={loading}>
+                              ⏱️ 生成60秒精简版
+                            </button>
+                          ) : (
+                            <div className="onemin-section">
+                              <h5>⏱️ 60秒精简版</h5>
+                              <pre>{oneMinScripts.curious}</pre>
+                              <button className="copy-btn" onClick={() => navigator.clipboard.writeText(oneMinScripts.curious)}>复制</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="script-card">
+                        <div className="script-card-header data">
+                          <div className="version-badge">C</div>
+                          <div>
+                            <h4>数据版</h4>
+                            <p>突出数字、成就、对比</p>
+                          </div>
+                        </div>
+                        <div className="script-card-body">
+                          <pre>{scripts.data || '点击生成一分钟精简版...'}</pre>
+                        </div>
+                        <div className="script-card-footer">
+                          {!oneMinScripts.data ? (
+                            <button className="generate-onemin-btn" onClick={() => generateOneMin('data')} disabled={loading}>
+                              ⏱️ 生成60秒精简版
+                            </button>
+                          ) : (
+                            <div className="onemin-section">
+                              <h5>⏱️ 60秒精简版</h5>
+                              <pre>{oneMinScripts.data}</pre>
+                              <button className="copy-btn" onClick={() => navigator.clipboard.writeText(oneMinScripts.data)}>复制</button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </main>
+          </div>
+        );
+      }
+      
+      return (
+        <div className="app">
+          <header className="header">
+            <div className="logo">
+              <div className="logo-icon">7F</div>
+              <div className="logo-text">
+                <h1>创意公式工坊</h1>
+                <p>爆款创意公式，基于广大大数据</p>
+              </div>
+            </div>
+            <nav className="nav">
+              <button className="nav-btn active">爆款公式</button>
+              <button className="nav-btn" onClick={() => selectedFormula && setPage('generate')}>实战案例</button>
+            </nav>
+            <div className="header-actions">
+              <button className="history-btn" onClick={() => setShowHistory(true)} title="历史记录">📋</button>
+              <button className="theme-btn" onClick={() => setDarkMode(!darkMode)}>{darkMode ? '🌙' : '☀️'}</button>
+              <button className="settings-btn" onClick={() => setShowSettings(true)}>⚙️</button>
+            </div>
+          </header>
+          
+          {showSettings && (
+            <div className="modal-overlay" onClick={() => setShowSettings(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <h3>API 设置</h3>
+                  <button className="modal-close" onClick={() => setShowSettings(false)}>×</button>
+                </div>
+                <div className="modal-body">
+                  <div className="form-group">
+                    <label>火山方舟 API Key</label>
+                    <input type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="请输入 API Key" />
+                  </div>
+                  <button className="submit-btn" onClick={saveSettings}>保存</button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <div className={`history-panel ${showHistory ? 'open' : ''}`}>
+            <div className="history-header">
+              <h3>📋 历史记录</h3>
+              <button className="history-close" onClick={() => setShowHistory(false)}>×</button>
+            </div>
+            <div className="history-list">
+              {history.length === 0 ? (
+                <div className="empty-history">暂无历史记录</div>
+              ) : (
+                history.map(item => (
+                  <div key={item.id} className="history-item" onClick={() => loadFromHistory(item)}>
+                    <div className="history-item-header">
+                      <span className="history-item-title">
+                        {item.type === 'title' ? '📝 标题' : item.type === 'scripts' ? '🎬 三版本脚本' : '⏱️ 60秒版'}
+                        {item.formula && ` · ${item.formula}`}
+                      </span>
+                      <span className="history-item-time">{item.time}</span>
+                    </div>
+                    <div className="history-item-desc">{item.title}</div>
+                  </div>
+                ))
+              )}
+            </div>
+            {history.length > 0 && (
+              <button className="clear-history-btn" onClick={clearHistory}>清空历史</button>
+            )}
+          </div>
+          
+          {showModal && selectedFormula && (
+            <div className="modal-overlay" onClick={() => setShowModal(false)}>
+              <div className="modal" onClick={e => e.stopPropagation()}>
+                <div className="modal-header">
+                  <div className="modal-title">
+                    <div className="card-icon" style={{background:selectedFormula.bg,color:selectedFormula.color}}>{selectedFormula.icon}</div>
+                    <div>
+                      <h3>{selectedFormula.name}</h3>
+                      <p>{selectedFormula.subtitle}</p>
+                    </div>
+                  </div>
+                  <button className="modal-close" onClick={() => setShowModal(false)}>×</button>
+                </div>
+                <div className="modal-body">
+                  <div className="section-title">公式结构拆解</div>
+                  <div className="structure-list">
+                    {structures[selectedFormula.id].map((s, i) => (
+                      <div key={i} className="structure-item">
+                        <div className="structure-time">{s.time}</div>
+                        <div>
+                          <span className="structure-type">{s.type}</span>
+                          <span className="structure-content">{s.content}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="info-grid">
+                    <div className="info-box">
+                      <h4>适用游戏类型</h4>
+                      <p>{selectedFormula.tags.join('、')}</p>
+                    </div>
+                    <div className="info-box">
+                      <h4>制作要点</h4>
+                      <p>{selectedFormula.tip}</p>
+                    </div>
+                  </div>
+                  
+                  <button className="generate-script-btn" onClick={goToGenerate}>使用这个公式生成脚本 →</button>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <main className="main">
+            <div className="page-title">
+              <h2>爆款创意公式</h2>
+            </div>
+            
+            <div className="filter-tabs">
+              <button className={`filter-tab ${filter === 'all' ? 'active' : ''}`} onClick={() => setFilter('all')}>全部公式</button>
+              <button className={`filter-tab ${filter === 'hot' ? 'active' : ''}`} onClick={() => setFilter('hot')}>每周热门榜</button>
+              <button className={`filter-tab ${filter === 'rising' ? 'active' : ''}`} onClick={() => setFilter('rising')}>每周飙升榜</button>
+              <button className={`filter-tab ${filter === 'new' ? 'active' : ''}`} onClick={() => setFilter('new')}>新创意榜</button>
+              <button className="filter-tab">📊 榜单对比</button>
+            </div>
+            
+            <div className="formulas-grid">
+              {filteredFormulas.map(f => (
+                <div key={f.id} className="formula-card" style={{'--card-color':f.color,'--card-bg':f.bg}} onClick={() => openModal(f)}>
+                  <div className="card-header">
+                    <div className="card-icon" style={{background:f.bg,color:f.color}}>{f.icon}</div>
+                    <span className="card-tag">{f.subtitle}</span>
+                  </div>
+                  <h3>{f.name}</h3>
+                  <div className="card-stats">
+                    <div className="stat">
+                      <span className="stat-label">代表案例</span>
+                      <span className="stat-value">{f.case}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">人气值</span>
+                      <span className="stat-value highlight">{f.popularity}</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">素材时长</span>
+                      <span className="stat-value">{f.duration}</span>
+                    </div>
+                  </div>
+                  <div className="card-tags">
+                    {f.tags.map((t, i) => <span key={i} className="tag">{t}</span>)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </main>
+        </div>
+      );
+    }
+    
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
